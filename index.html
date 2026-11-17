@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="en" data-brand="wbc">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Westpac | Payment flags — clickable concept</title>
+<style>
+  :root {
+    --red: #d5002b; --red-dark: #a80022; --ink: #1f1c2e; --muted: #6b6878; --line: #e7e4ea;
+    --page: #ecebf0; --card: #ffffff;
+    --ok: #1a7f4b; --ok-bg: #e4f4ea; --warn: #9a5b00; --warn-bg: #fdf0d5;
+    --bad: #b3261e; --bad-bg: #fde4e1; --info: #2b4c9b; --info-bg: #e6ecfa;
+    --z: 1.25;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; display: flex; }
+  :root { color-scheme: light only; }
+  button { font: inherit; cursor: pointer; color: var(--ink); background-color: #fff; -webkit-appearance: none; appearance: none; }
+  input[type=range] { accent-color: var(--red); }
+
+  /* ---------- sidebar ---------- */
+  aside.panel { width: 330px; flex: none; background: #fff; border-right: 1px solid var(--line); padding: 22px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+  .panel h1 { font-size: 18px; margin: 0; letter-spacing: -.01em; }
+  .panel .note { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
+  .panel h2 { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .scn { display: flex; flex-direction: column; gap: 6px; }
+  .scn button { text-align: left; border: 1.5px solid var(--line); background: #fff; border-radius: 10px; padding: 9px 11px; }
+  .scn button b { display: block; font-size: 14px; }
+  .scn button span { font-size: 12px; color: var(--muted); }
+  .scn button.on { border-color: var(--red); background: #fff5f6; color: var(--ink); }
+  .scn button b { color: var(--ink); }
+  .desc { font-size: 13px; color: #45425a; margin: 0; }
+  .steps-nav { display: flex; flex-direction: column; gap: 4px; }
+  .steps-nav button { text-align: left; border: 0; background: #f6f5f8; color: var(--ink); border-radius: 8px; padding: 7px 10px; font-size: 13px; }
+  .steps-nav button.on { background: var(--ink); color: #fff; }
+  .ctrl { display: flex; flex-direction: column; gap: 6px; }
+  .ctrl button { border: 1.5px dashed #c9c5d2; background: #fff; color: var(--ink); border-radius: 10px; padding: 8px 10px; font-size: 13px; font-weight: 600; text-align: left; }
+  .ctrl button:disabled { opacity: .4; cursor: default; }
+  .row-ctl { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+  .row-ctl input { flex: 1; }
+  .big-btn { border: 0; background-color: var(--red); color: #fff; border-radius: 10px; padding: 10px; font-weight: 700; }
+  .ghost-btn { border: 1.5px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px; padding: 9px; font-weight: 600; }
+  kbd { font: 11px ui-monospace, monospace; background: #f1eff4; border: 1px solid #ddd9e3; border-radius: 4px; padding: 0 4px; }
+
+  /* ---------- stage ---------- */
+  main.stage { flex: 1; display: flex; align-items: center; justify-content: center; gap: 56px; overflow: auto; padding: 24px; }
+  .device { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .device .dev-label { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+  .phone-wrap { zoom: var(--z); }
+  body.rec aside.panel { display: none; }
+  body.rec .device .dev-label { display: none; }
+  body.rec main.stage { background: var(--page); }
+  .rec-hint { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; font-size: 13px; padding: 7px 14px; border-radius: 99px; opacity: 0; pointer-events: none; transition: opacity .4s; z-index: 9; }
+  .rec-hint.show { opacity: .92; }
+
+  /* ---------- phone (from concept screens) ---------- */
+  .phone { width: 300px; height: 620px; border-radius: 42px; padding: 10px; background: #17151f; box-shadow: 0 24px 48px -18px rgba(31,28,46,.45), 0 2px 0 #3a3747 inset; }
+  .screen { position: relative; width: 100%; height: 100%; border-radius: 33px; overflow: hidden; background: #f6f5f8; color: var(--ink); font-size: 13px; line-height: 1.4; display: flex; flex-direction: column; }
+  .screen > .view { position: absolute; inset: 0; display: flex; flex-direction: column; animation: viewIn .28s ease-out; }
+  @keyframes viewIn { from { opacity: 0; transform: translateX(14px); } }
+  .status { display: flex; justify-content: space-between; align-items: center; padding: 10px 22px 4px; font-size: 12px; font-weight: 600; flex: none; }
+  .status .dots { display: flex; gap: 4px; align-items: center; }
+  .status .dots i { display: block; background: currentColor; border-radius: 2px; }
+  .status .sig { width: 14px; height: 9px; clip-path: polygon(0 100%, 100% 0, 100% 100%); }
+  .status .bat { width: 20px; height: 9px; border-radius: 3px; }
+  .red-top .status { background: var(--red); color: #fff; }
+  .appbar { flex: none; background: var(--red); color: #fff; padding: 6px 16px 12px; display: flex; gap: 8px; align-items: flex-start; }
+  .appbar .back { border: 0; background: transparent; color: #fff; font-size: 22px; line-height: 1; padding: 0 4px 0 0; margin-top: -2px; }
+  .appbar .t { font-weight: 700; font-size: 16px; }
+  .appbar .s { font-size: 11.5px; opacity: .9; }
+  .body { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; }
+  .card { background: var(--card); border-radius: 14px; padding: 12px; border: 1px solid var(--line); }
+  .label { font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+  .big { font-size: 26px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .row + .row { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; }
+  .row.bill { display: grid; grid-template-columns: 1fr auto 76px; }
+  .row.bill .pill { justify-self: end; }
+  .sub { font-size: 11px; color: var(--muted); }
+  .num { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+  .pill { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+  .ok { color: var(--ok); background: var(--ok-bg); }
+  .warn { color: var(--warn); background: var(--warn-bg); }
+  .bad { color: var(--bad); background: var(--bad-bg); }
+  .info { color: var(--info); background: var(--info-bg); }
+  .ai { background: #faf7ff; border: 1px solid #e3d9f7; border-radius: 14px; padding: 11px 12px; }
+  .ai .who { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #5b3fa8; margin-bottom: 4px; }
+  .ai .who::before { content: "✦"; }
+  .ai p { margin: 0; }
+  .ai .disc { font-size: 10px; color: #8a83a3; margin-top: 6px; }
+  .btn { display: block; width: 100%; text-align: center; border-radius: 12px; padding: 10px; font-weight: 700; border: 1.5px solid transparent; transition: transform .08s, filter .15s; }
+  .btn:active { transform: scale(.98); }
+  .btn:hover { filter: brightness(.96); }
+  .btn.primary { background-color: var(--red); color: #fff; }
+  .btn.ghost { background: #fff; border-color: var(--line); color: var(--ink); }
+  .btn.quiet { color: var(--muted); padding: 4px; font-weight: 600; background: transparent; }
+  .btn.dark { background-color: var(--ink); color: #fff; }
+  .btns { display: flex; flex-direction: column; gap: 7px; margin-top: auto; }
+  .btns.two { flex-direction: row; margin-top: 0; }
+  .link { border: 0; background: transparent; color: #5b3fa8; font-weight: 700; font-size: 11.5px; padding: 0; text-decoration: underline; }
+  .dim { position: absolute; inset: 0; background: rgba(23,21,31,.55); animation: fadeIn .25s; }
+  @keyframes fadeIn { from { opacity: 0; } }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 22px 22px 0 0; padding: 10px 14px 16px; display: flex; flex-direction: column; gap: 10px; animation: sheetUp .32s cubic-bezier(.2,.8,.2,1); max-height: 92%; overflow-y: auto; }
+  @keyframes sheetUp { from { transform: translateY(100%); } }
+  .sheet::before { content: ""; width: 36px; height: 4px; border-radius: 4px; background: #d6d3dc; align-self: center; flex: none; }
+  .sheet h3, .body h3 { margin: 0; font-size: 16px; line-height: 1.25; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; border: 1.5px solid var(--line); background: #fff; color: var(--ink); border-radius: 12px; padding: 9px 10px; text-align: left; width: 100%; }
+  .opt.sel { border-color: var(--ok); background: #f3fbf6; }
+  .opt .radio { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid #b9b5c4; margin-top: 2px; }
+  .opt.sel .radio { border-color: var(--ok); background: radial-gradient(var(--ok) 45%, #fff 50%); }
+  .opt b { display: block; }
+  .opt span { font-size: 11.5px; color: var(--muted); }
+  .bar { height: 8px; border-radius: 8px; background: #ebe8ef; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--ok); border-radius: 8px; transition: width .6s; }
+  .toggle { flex: none; width: 34px; height: 20px; border-radius: 20px; background-color: var(--ok); position: relative; border: 0; padding: 0; transition: background .2s; }
+  .toggle::after { content: ""; position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: all .2s; }
+  .toggle.off { background-color: #c9c5d2; } .toggle.off::after { right: 16px; }
+  .face { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; }
+  .notif { margin: 4px 10px 0; background: rgba(255,255,255,.94); border-radius: 16px; padding: 9px 11px; font-size: 12px; box-shadow: 0 6px 16px rgba(0,0,0,.18); text-align: left; border: 0; width: calc(100% - 20px); animation: notifIn .4s cubic-bezier(.2,.8,.2,1); color: var(--ink); }
+  @keyframes notifIn { from { transform: translateY(-30px); opacity: 0; } }
+  .notif .src { font-size: 10.5px; font-weight: 700; color: var(--red); display: flex; justify-content: space-between; }
+  .notif .src span { color: var(--muted); font-weight: 500; }
+  .steps { display: flex; flex-direction: column; gap: 8px; }
+  .step { display: flex; gap: 9px; align-items: flex-start; }
+  .step .dot { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; background: var(--ok); margin-top: 1px; font-style: normal; }
+  .step.wait .dot { background: var(--warn); } .step.todo .dot { background: #c9c5d2; } .step.no .dot { background: var(--bad); }
+  .step.todo { color: var(--muted); }
+  .step.wait .dot { animation: pulse 1.4s infinite; }
+  @keyframes pulse { 50% { opacity: .45; } }
+  .map { height: 92px; border-radius: 10px; position: relative; overflow: hidden; background: #e8eef5; }
+  .legend { display: flex; gap: 12px; margin-top: 4px; font-size: 11px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+  .search { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .search::before { content: ""; width: 11px; height: 11px; border: 2px solid currentColor; border-radius: 50%; flex: none; }
+  .qr { width: 124px; height: 124px; margin: 2px auto 8px; border-radius: 10px; border: 1px solid var(--line); padding: 10px;
+    background: conic-gradient(var(--ink) 25%, transparent 0 50%, var(--ink) 0 75%, transparent 0) 10px 10px / 16px 16px content-box, #fff; }
+  .code { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
+  .code b { width: 32px; height: 40px; border-radius: 9px; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 19px; font-variant-numeric: tabular-nums; }
+  .center { text-align: center; }
+  .contact { display: flex; gap: 10px; align-items: center; width: 100%; background: transparent; color: var(--ink); border: 0; padding: 0; text-align: left; }
+  .done-ico { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; color: #fff; margin: 26px auto 6px; animation: pop .4s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { from { transform: scale(.3); opacity: 0; } }
+  .lock { background: linear-gradient(160deg, #30405f, #141a2a); color: #fff; }
+  .lock .clock { text-align: center; font-size: 54px; font-weight: 300; letter-spacing: -.02em; margin-top: 18px; line-height: 1; }
+  .lock .date { text-align: center; font-size: 13px; opacity: .85; margin-bottom: 14px; }
+  .lock .hint { margin-top: auto; text-align: center; font-size: 11px; opacity: .6; padding-bottom: 14px; }
+  .field { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; }
+  .field .label { margin-bottom: 1px; }
+  .toast { position: absolute; left: 12px; right: 12px; bottom: 16px; background: var(--ink); color: #fff; font-size: 12px; padding: 10px 12px; border-radius: 12px; animation: toastIn .3s; z-index: 5; }
+  @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } }
+  .scanner { height: 200px; border-radius: 14px; background: #111; position: relative; overflow: hidden; display: grid; place-items: center; }
+  .scanner::before { content: ""; width: 120px; height: 120px; border: 3px solid rgba(255,255,255,.85); border-radius: 14px; }
+  .scanner::after { content: ""; position: absolute; left: 25%; right: 25%; height: 2px; background: #ff5a7a; top: 30%; animation: scan 1.6s ease-in-out infinite alternate; }
+  @keyframes scan { to { top: 70%; } }
+  .stepper { display: flex; gap: 8px; align-items: center; }
+  .stepper button { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line); background: #fff; color: var(--ink); font-weight: 700; padding: 0; }
+</style>
+<style id="westpac-gel-presentation">
+/* Westpac GEL theme tokens; presentation only. Original demo logic unchanged. */
+:root{--reserved-success-50: #f2f9f2;--reserved-success-100: #d9ecd9;--reserved-success-200: #99cc99;--reserved-success-300: #47a447;--reserved-success-400: #249224;--reserved-success-500: #008000;--reserved-success-600: #006d00;--reserved-success-700: #005a00;--reserved-success-800: #004600;--reserved-success-900: #003300;--reserved-success-950: #002000;--reserved-info-50: #f2f8fc;--reserved-info-100: #d9eaf6;--reserved-info-200: #99c7e7;--reserved-info-300: #459ad4;--reserved-info-400: #2487cc;--reserved-info-500: #0074c4;--reserved-info-600: #0063a7;--reserved-info-700: #005189;--reserved-info-800: #00406c;--reserved-info-900: #002e4e;--reserved-info-950: #001d31;--reserved-warning-50: #fcf5f2;--reserved-warning-100: #f3d8cc;--reserved-warning-200: #e8b199;--reserved-warning-300: #d7784f;--reserved-warning-400: #ce5826;--reserved-warning-500: #c53b00;--reserved-warning-600: #a73200;--reserved-warning-700: #8a2900;--reserved-warning-800: #6c2000;--reserved-warning-900: #4f1800;--reserved-warning-950: #310f00;--reserved-danger-50: #fcf2f2;--reserved-danger-100: #f9e6e6;--reserved-danger-200: #eaa6a6;--reserved-danger-300: #db6363;--reserved-danger-400: #d03333;--reserved-danger-500: #c40000;--reserved-danger-600: #a70000;--reserved-danger-700: #890000;--reserved-danger-800: #6c0000;--reserved-danger-900: #4e0000;--reserved-danger-950: #310000;--reserved-system-50: #fffff2;--reserved-system-100: #ffffe6;--reserved-system-200: #ffffbf;--reserved-system-300: #ffff80;--reserved-system-400: #ffff40;--reserved-system-500: #ffff00;--reserved-system-600: #d9d900;--reserved-system-700: #b3b300;--reserved-system-800: #8c8c00;--reserved-system-900: #666600;--reserved-system-950: #404000;}/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+
+
+
+    [data-brand="wbc"] {
+      /* Primitive Colors */
+      --mono-white: #ffffff;
+      --mono-black: #000000;
+      --wbc-muted-50: #f9f9fa;
+      --wbc-muted-100: #f5f5f6;
+      --wbc-muted-200: #dedee1;
+      --wbc-muted-300: #b6b6bc;
+      --wbc-muted-400: #8e8d98;
+      --wbc-muted-500: #706f7c;
+      --wbc-muted-600: #5b5b6a;
+      --wbc-muted-700: #464651;
+      --wbc-muted-800: #323238;
+      --wbc-muted-900: #1c1c1f;
+      --wbc-muted-950: #161619;
+      --wbc-primary-50: #fff0f0;
+      --wbc-primary-100: #facccb;
+      --wbc-primary-200: #f46e69;
+      --wbc-primary-300: #f1423c;
+      --wbc-primary-400: #ee221b;
+      --wbc-primary-500: #da1710;
+      --wbc-primary-600: #b9140e;
+      --wbc-primary-700: #99100b;
+      --wbc-primary-800: #780d09;
+      --wbc-primary-900: #570906;
+      --wbc-primary-950: #370604;
+      --wbc-primary-opacity: #da171080;
+      --wbc-hero-50: #f1f0fa;
+      --wbc-hero-100: #e2e1f4;
+      --wbc-hero-200: #a9a5df;
+      --wbc-hero-300: #6f69c9;
+      --wbc-hero-400: #423c97;
+      --wbc-hero-500: #1f1c4f;
+      --wbc-hero-600: #18144d;
+      --wbc-hero-700: #130f48;
+      --wbc-hero-800: #0d093e;
+      --wbc-hero-900: #090538;
+      --wbc-hero-950: #060236;
+      --wbc-hero-opacity: #3a349399;
+      --wbc-pop-50: #fff5fd;
+      --wbc-pop-100: #ffecfb;
+      --wbc-pop-200: #ffcff6;
+      --wbc-pop-300: #ff9eed;
+      --wbc-pop-400: #ff6ee4;
+      --wbc-pop-500: #ff3ddb;
+      --wbc-pop-600: #d934ba;
+      --wbc-pop-700: #b32b99;
+      --wbc-pop-800: #8c2278;
+      --wbc-pop-900: #59154d;
+      --wbc-pop-950: #330c2c;
+      --wbc-pop-opacity: #ff3ddb73;
+      --wbc-holler-50: #faf1fd;
+      --wbc-holler-100: #ebcdf9;
+      --wbc-holler-200: #ce84f0;
+      --wbc-holler-300: #bc57eb;
+      --wbc-holler-400: #ad32e6;
+      --wbc-holler-500: #991ad6;
+      --wbc-holler-600: #8717ba;
+      --wbc-holler-700: #70139b;
+      --wbc-holler-800: #5c0f7f;
+      --wbc-holler-900: #450c5f;
+      --wbc-holler-950: #2e0840;
+      --wbc-holler-opacity: #991ad680;
+      --wbc-sing-50: #faf2f2;
+      --wbc-sing-100: #f5d9d9;
+      --wbc-sing-200: #efa2a2;
+      --wbc-sing-300: #e76969;
+      --wbc-sing-400: #cf2c2c;
+      --wbc-sing-500: #990000;
+      --wbc-sing-600: #860000;
+      --wbc-sing-700: #710000;
+      --wbc-sing-800: #5d0000;
+      --wbc-sing-900: #4d0000;
+      --wbc-sing-950: #410000;
+      --wbc-sing-opacity: #99000080;
+      --wbc-dance-50: #fef4eb;
+      --wbc-dance-100: #fde7d3;
+      --wbc-dance-200: #fbcba2;
+      --wbc-dance-300: #f9b071;
+      --wbc-dance-400: #f79540;
+      --wbc-dance-500: #f57a0f;
+      --wbc-dance-600: #ce6409;
+      --wbc-dance-700: #9d4c07;
+      --wbc-dance-800: #713705;
+      --wbc-dance-900: #401f03;
+      --wbc-dance-950: #2c1502;
+      --wbc-dance-opacity: #f57a0f73;
+
+      /* Light Mode Semantic Tokens */
+      --background-white: var(--mono-white);
+      --background-pale: var(--wbc-muted-100);
+      --background-faint: var(--wbc-muted-50);
+      --background-primary: var(--wbc-primary-500);
+      --background-hero: var(--wbc-hero-500);
+      --surface-muted-vivid: var(--wbc-muted-950);
+      --surface-muted: var(--wbc-muted-500);
+      --surface-muted-strong: var(--wbc-muted-400);
+      --surface-muted-mild: var(--wbc-muted-300);
+      --surface-muted-soft: var(--wbc-muted-200);
+      --surface-muted-pale: var(--wbc-muted-100);
+      --surface-muted-faint: var(--wbc-muted-50);
+      --surface-primary: var(--wbc-primary-500);
+      --surface-primary-faint: var(--wbc-primary-50);
+      --surface-hero: var(--wbc-hero-500);
+      --surface-hero-faint: var(--wbc-hero-50);
+      --surface-pop: var(--wbc-pop-500);
+      --surface-pop-faint: var(--wbc-pop-50);
+      --surface-holler: var(--wbc-holler-500);
+      --surface-holler-faint: var(--wbc-holler-50);
+      --surface-success: var(--reserved-success-500);
+      --surface-success-faint: var(--reserved-success-50);
+      --surface-info: var(--reserved-info-500);
+      --surface-info-faint: var(--reserved-info-50);
+      --surface-warning: var(--reserved-warning-500);
+      --surface-warning-faint: var(--reserved-warning-50);
+      --surface-danger: var(--reserved-danger-500);
+      --surface-danger-faint: var(--reserved-danger-50);
+      --surface-system-error: var(--reserved-system-500);
+      --surface-system-error-dark: var(--reserved-system-950);
+      --surface-mono: var(--mono-white);
+      --surface-reversed: var(--mono-white);
+      --text-body: var(--wbc-muted-950);
+      --text-heading: var(--wbc-hero-500);
+      --text-muted: var(--wbc-muted-500);
+      --text-primary: var(--wbc-primary-500);
+      --text-hero: var(--wbc-hero-500);
+      --text-holler: var(--wbc-holler-500);
+      --text-link: var(--wbc-primary-500);
+      --text-success: var(--reserved-success-500);
+      --text-info: var(--reserved-info-500);
+      --text-warning: var(--reserved-warning-500);
+      --text-danger: var(--reserved-danger-500);
+      --text-system-error: var(--reserved-system-950);
+      --text-mono: var(--mono-white);
+      --text-reversed: var(--mono-white);
+      --border-muted: var(--wbc-muted-500);
+      --border-muted-strong: var(--wbc-muted-400);
+      --border-muted-mild: var(--wbc-muted-300);
+      --border-muted-soft: var(--wbc-muted-200);
+      --border-hero: var(--wbc-hero-500);
+      --border-primary: var(--wbc-primary-500);
+      --border-pop: var(--wbc-pop-500);
+      --border-holler: var(--wbc-holler-500);
+      --border-success: var(--reserved-success-500);
+      --border-success-mild: var(--reserved-success-300);
+      --border-info: var(--reserved-info-500);
+      --border-info-mild: var(--reserved-info-300);
+      --border-warning: var(--reserved-warning-500);
+      --border-warning-mild: var(--reserved-warning-300);
+      --border-danger: var(--reserved-danger-500);
+      --border-danger-mild: var(--reserved-danger-300);
+      --border-mono: var(--mono-white);
+      --border-focus: var(--wbc-holler-300);
+      --data-a-solid: var(--wbc-primary-500);
+      --data-a-tint: var(--wbc-primary-200);
+      --data-a-opacity: var(--wbc-primary-opacity);
+      --data-b-solid: var(--wbc-hero-500);
+      --data-b-tint: var(--wbc-hero-300);
+      --data-b-opacity: var(--wbc-hero-opacity);
+      --data-c-solid: var(--wbc-pop-500);
+      --data-c-tint: var(--wbc-pop-300);
+      --data-c-opacity: var(--wbc-pop-opacity);
+      --data-d-solid: var(--wbc-holler-500);
+      --data-d-tint: var(--wbc-holler-200);
+      --data-d-opacity: var(--wbc-holler-opacity);
+      --data-e-solid: var(--wbc-sing-500);
+      --data-e-tint: var(--wbc-sing-300);
+      --data-e-opacity: var(--wbc-sing-opacity);
+      --data-f-solid: var(--wbc-dance-500);
+      --data-f-tint: var(--wbc-dance-300);
+      --data-f-opacity: var(--wbc-dance-opacity);
+      --surface-pictogram-base: var(--wbc-hero-500);
+      --surface-pictogram-accent: var(--wbc-primary-500);
+      --surface-hover-primary: var(--wbc-primary-400);
+      --surface-active-primary: var(--wbc-primary-200);
+      --surface-hover-hero: var(--wbc-hero-400);
+      --surface-active-hero: var(--wbc-hero-300);
+      --surface-hover-primary-faint: var(--wbc-primary-50);
+      --surface-active-primary-faint: var(--wbc-primary-100);
+      --surface-hover-hero-faint: var(--wbc-hero-50);
+      --surface-active-hero-faint: var(--wbc-hero-100);
+      --surface-hover-muted-pale: var(--wbc-muted-100);
+      --surface-active-muted-pale: var(--wbc-muted-300);
+      --surface-hover-mono: var(--mono-white);
+      --surface-active-mono: var(--wbc-muted-200);
+
+      /* Font Family */
+      --font-brand: Westpac;
+    }
+
+    /* TODO: TEMPORARILY DISABLED - DARK MODE TOKENS TO BE INCLUDED IN FUTURE UPDATE */
+    [data-brand="wbc"][data-theme="dark"] {
+      /* Dark Mode Semantic Tokens */
+    }
+
+@font-face{font-family:Westpac;src:url(data:font/woff2;base64,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) format('woff2');font-weight:700;font-display:swap}
+:root{--red:var(--surface-primary);--red-dark:var(--wbc-primary-600);--ink:var(--text-body);--muted:var(--text-muted);--line:var(--border-muted-soft);--page:var(--background-pale);--card:var(--background-white);--ok:var(--text-success);--ok-bg:var(--surface-success-faint);--warn:var(--text-warning);--warn-bg:var(--surface-warning-faint);--bad:var(--text-danger);--bad-bg:var(--surface-danger-faint);--info:var(--text-info);--info-bg:var(--surface-info-faint)}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--background-pale)}
+aside.panel{padding:24px 20px;border-top:5px solid var(--surface-primary);gap:20px}
+.panel>div:first-child::before{content:'';display:block;width:92px;height:38px;margin:0 0 18px;background:url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjkiIGhlaWdodD0iMjgiIHZpZXdCb3g9IjAgMCA2OSAyOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAwXzEzOV8xMjQxKSI+CjxwYXRoIGQ9Ik0yNC4wMzAzIDI1LjA4OTZMMTcuMzMzMyA0LjExNDdDMTYuNDQ3IDAuOTAzMjI2IDE0Ljc3MjcgMCAxMi40MDkxIDBIMEMwLjk4NDg0OCAwLjQwMTQzNCAxLjU3NTc2IDIuOTEwMzkgMS41NzU3NiAyLjkxMDM5TDcuNTgzMzMgMjMuOTg1N0M4LjI3MjczIDI2LjU5NSAxMC40Mzk0IDI4IDEyLjkwMTUgMjhIMjZDMjUuMDE1MiAyNy44OTk2IDI0LjAzMDMgMjUuMDg5NiAyNC4wMzAzIDI1LjA4OTZaIiBmaWxsPSIjREExNzEwIi8+CjxwYXRoIGQ9Ik00NC45Njk3IDI1LjA4OTZMNTEuNjY2NyA0LjExNDdDNTIuNTUzIDAuOTAzMjI2IDU0LjIyNzMgMCA1Ni41OTA5IDBINjlDNjguMDE1MiAwLjQwMTQzNCA2Ny40MjQyIDIuOTEwMzkgNjcuNDI0MiAyLjkxMDM5TDYxLjQxNjcgMjMuOTg1N0M2MC43MjczIDI2LjU5NSA1OC41NjA2IDI4IDU2LjA5ODUgMjhINDNDNDMuOTg0OCAyNy44OTk2IDQ0Ljk2OTcgMjUuMDg5NiA0NC45Njk3IDI1LjA4OTZaIiBmaWxsPSIjREExNzEwIi8+CjxwYXRoIGQ9Ik00MiAwSDI3VjI4SDQyVjBaIiBmaWxsPSIjREExNzEwIi8+CjwvZz4KPGRlZnM+CjxjbGlwUGF0aCBpZD0iY2xpcDBfMTM5XzEyNDEiPgo8cmVjdCB3aWR0aD0iNjkiIGhlaWdodD0iMjgiIGZpbGw9IndoaXRlIi8+CjwvY2xpcFBhdGg+CjwvZGVmcz4KPC9zdmc+Cg==) left center/contain no-repeat}
+h1,h3,.appbar .t{font-family:Westpac,Arial,sans-serif;font-weight:700;color:var(--text-heading)}
+.panel h1{font-size:22px;line-height:1.2}.panel h2{color:var(--text-heading);letter-spacing:.03em;font-size:12px}
+.panel .note{line-height:1.5}.scn button{border-radius:6px;padding:11px 12px;border-width:1px}.scn button.on{border:2px solid var(--border-primary);padding:10px 11px;background:var(--surface-primary-faint)}
+.steps-nav button{border-radius:4px;background:var(--background-faint)}.steps-nav button.on{background:var(--surface-hero)}
+.ctrl button{border:1px solid var(--border-muted-mild);border-radius:4px}.big-btn,.ghost-btn{border-radius:4px}.ghost-btn{border-color:var(--border-primary)}
+main.stage{gap:40px;padding:32px;min-width:0;align-items:safe center;justify-content:safe center}
+.device .dev-label{color:var(--text-heading);letter-spacing:0}.phone{box-shadow:0 24px 50px -22px #1f1c4f66;background:#171719}
+.screen{background:var(--background-pale);font-family:Arial,Helvetica,sans-serif;line-height:1.45}
+.status,.red-top .status{background:#fff;color:var(--text-body);padding-bottom:8px}
+.lock .status{background:transparent;color:#fff}
+.appbar{position:relative;background:#fff;color:var(--text-body);border-bottom:1px solid var(--line);padding:12px 14px;align-items:center;gap:8px}
+.appbar::after{content:'';width:32px;height:24px;flex:none;margin-left:auto;background:url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjkiIGhlaWdodD0iMjgiIHZpZXdCb3g9IjAgMCA2OSAyOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAwXzEzOV8xMjQxKSI+CjxwYXRoIGQ9Ik0yNC4wMzAzIDI1LjA4OTZMMTcuMzMzMyA0LjExNDdDMTYuNDQ3IDAuOTAzMjI2IDE0Ljc3MjcgMCAxMi40MDkxIDBIMEMwLjk4NDg0OCAwLjQwMTQzNCAxLjU3NTc2IDIuOTEwMzkgMS41NzU3NiAyLjkxMDM5TDcuNTgzMzMgMjMuOTg1N0M4LjI3MjczIDI2LjU5NSAxMC40Mzk0IDI4IDEyLjkwMTUgMjhIMjZDMjUuMDE1MiAyNy44OTk2IDI0LjAzMDMgMjUuMDg5NiAyNC4wMzAzIDI1LjA4OTZaIiBmaWxsPSIjREExNzEwIi8+CjxwYXRoIGQ9Ik00NC45Njk3IDI1LjA4OTZMNTEuNjY2NyA0LjExNDdDNTIuNTUzIDAuOTAzMjI2IDU0LjIyNzMgMCA1Ni41OTA5IDBINjlDNjguMDE1MiAwLjQwMTQzNCA2Ny40MjQyIDIuOTEwMzkgNjcuNDI0MiAyLjkxMDM5TDYxLjQxNjcgMjMuOTg1N0M2MC43MjczIDI2LjU5NSA1OC41NjA2IDI4IDU2LjA5ODUgMjhINDNDNDMuOTg0OCAyNy44OTk2IDQ0Ljk2OTcgMjUuMDg5NiA0NC45Njk3IDI1LjA4OTZaIiBmaWxsPSIjREExNzEwIi8+CjxwYXRoIGQ9Ik00MiAwSDI3VjI4SDQyVjBaIiBmaWxsPSIjREExNzEwIi8+CjwvZz4KPGRlZnM+CjxjbGlwUGF0aCBpZD0iY2xpcDBfMTM5XzEyNDEiPgo8cmVjdCB3aWR0aD0iNjkiIGhlaWdodD0iMjgiIGZpbGw9IndoaXRlIi8+CjwvY2xpcFBhdGg+CjwvZGVmcz4KPC9zdmc+Cg==) center/contain no-repeat}
+.appbar>div{min-width:0}.appbar .back{color:var(--text-primary);margin:0;align-self:center}.appbar .t{font-size:17px;line-height:1.2}.appbar .s{color:var(--text-muted);opacity:1;font-size:11px;margin-top:4px}
+.body{padding:14px 12px;gap:12px}.card{border-radius:6px;border-color:var(--border-muted-soft);box-shadow:0 1px 2px #16161905}
+.big{color:var(--text-heading)}.label{letter-spacing:.04em}.pill{border-radius:4px;padding:3px 7px}
+.ai{border:0;border-top:1px solid var(--border-info);border-bottom:1px solid var(--border-info);border-radius:0;background:var(--surface-info-faint);padding:12px}
+.ai .who{color:var(--text-heading);font-size:12px}.ai .who::before{color:var(--text-info)}.ai .disc{color:var(--text-muted);font-size:10.5px;line-height:1.45}
+.btn{border-radius:4px;min-height:42px;padding:10px 9px;border-width:1px}.btn.ghost{border-color:var(--border-primary)}.btn.dark{background:var(--surface-hero)}.btn.quiet{min-height:36px;color:var(--text-link);text-decoration:underline}.btns{gap:8px}.btns.two{gap:7px}.link{color:var(--text-link)}
+.sheet{border-radius:16px 16px 0 0;gap:12px}.sheet h3,.body h3{font-size:18px}.opt,.field{border-radius:4px}.opt.sel{background:var(--surface-success-faint)}.bar{background:var(--surface-muted-soft)}.bar i{background:var(--surface-hero)}
+.toggle{background:var(--surface-hero)}.toggle.off{background:var(--surface-muted-mild)}.toast{background:var(--surface-hero);border-radius:4px}.lock{background:linear-gradient(155deg,#423c97,#1f1c4f 55%,#090538)}.notif{border-radius:12px}.notif .src{padding-left:24px;position:relative}.notif .src::before{content:'';position:absolute;left:0;top:0;width:19px;height:14px;background:url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjkiIGhlaWdodD0iMjgiIHZpZXdCb3g9IjAgMCA2OSAyOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAwXzEzOV8xMjQxKSI+CjxwYXRoIGQ9Ik0yNC4wMzAzIDI1LjA4OTZMMTcuMzMzMyA0LjExNDdDMTYuNDQ3IDAuOTAzMjI2IDE0Ljc3MjcgMCAxMi40MDkxIDBIMEMwLjk4NDg0OCAwLjQwMTQzNCAxLjU3NTc2IDIuOTEwMzkgMS41NzU3NiAyLjkxMDM5TDcuNTgzMzMgMjMuOTg1N0M4LjI3MjczIDI2LjU5NSAxMC40Mzk0IDI4IDEyLjkwMTUgMjhIMjZDMjUuMDE1MiAyNy44OTk2IDI0LjAzMDMgMjUuMDg5NiAyNC4wMzAzIDI1LjA4OTZaIiBmaWxsPSIjREExNzEwIi8+CjxwYXRoIGQ9Ik00NC45Njk3IDI1LjA4OTZMNTEuNjY2NyA0LjExNDdDNTIuNTUzIDAuOTAzMjI2IDU0LjIyNzMgMCA1Ni41OTA5IDBINjlDNjguMDE1MiAwLjQwMTQzNCA2Ny40MjQyIDIuOTEwMzkgNjcuNDI0MiAyLjkxMDM5TDYxLjQxNjcgMjMuOTg1N0M2MC43MjczIDI2LjU5NSA1OC41NjA2IDI4IDU2LjA5ODUgMjhINDNDNDMuOTg0OCAyNy44OTk2IDQ0Ljk2OTcgMjUuMDg5NiA0NC45Njk3IDI1LjA4OTZaIiBmaWxsPSIjREExNzEwIi8+CjxwYXRoIGQ9Ik00MiAwSDI3VjI4SDQyVjBaIiBmaWxsPSIjREExNzEwIi8+CjwvZz4KPGRlZnM+CjxjbGlwUGF0aCBpZD0iY2xpcDBfMTM5XzEyNDEiPgo8cmVjdCB3aWR0aD0iNjkiIGhlaWdodD0iMjgiIGZpbGw9IndoaXRlIi8+CjwvY2xpcFBhdGg+CjwvZGVmcz4KPC9zdmc+Cg==) center/contain no-repeat}
+button:focus-visible,input:focus-visible{outline:3px solid var(--border-focus);outline-offset:3px}
+@media(max-width:760px){body:not(.rec){height:auto;min-height:100%;flex-direction:column}aside.panel{width:100%;max-height:40vh;flex:none;border-right:0;border-bottom:1px solid var(--line)}main.stage{min-height:760px;justify-content:flex-start;gap:24px;padding:24px}body.rec main.stage{min-height:100vh}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<aside class="panel">
+  <div>
+    <h1>Payment flags: clickable demo</h1>
+    <p class="note">Concept prototype with made-up data. Tap the phone to move through each flow.</p>
+  </div>
+  <div>
+    <h2>Scenario</h2>
+    <div class="scn" id="scnList"></div>
+  </div>
+  <p class="desc" id="scnDesc"></p>
+  <div>
+    <h2>Jump to screen</h2>
+    <div class="steps-nav" id="stepsNav"></div>
+  </div>
+  <div id="ctrlBox">
+    <h2>Demo controls</h2>
+    <div class="ctrl" id="ctrl"></div>
+  </div>
+  <div>
+    <h2>Recording</h2>
+    <div class="row-ctl"><span>Size</span><input id="zoom" type="range" min="1" max="1.6" step="0.05" value="1.25"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="big-btn" style="flex:1" id="recBtn">Recording mode</button>
+      <button class="ghost-btn" id="resetBtn">Reset</button>
+    </div>
+    <p class="note">Recording mode hides this panel. <kbd>Esc</kbd> toggles it, <kbd>R</kbd> resets the scenario, <kbd>1</kbd>-<kbd>5</kbd> switch scenarios.</p>
+  </div>
+</aside>
+
+<main class="stage" id="stage"></main>
+<div class="rec-hint" id="recHint">Recording mode · Esc to exit</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- helpers ----------
+  var bars = '<span class="dots"><i class="sig"></i><i class="bat"></i></span>';
+  function status(t, style) { return '<div class="status"' + (style ? ' style="' + style + '"' : '') + '><span>' + t + '</span>' + bars + '</div>'; }
+  function appbar(t, s, back) {
+    return '<div class="appbar">' + (back ? '<button class="back" data-go="' + back + '" aria-label="Back">‹</button>' : '') +
+      '<div><div class="t">' + t + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div></div>';
+  }
+  function ai(who, text, disc) {
+    return '<div class="ai"><div class="who">' + who + '</div><p>' + text + '</p>' + (disc ? '<div class="disc">AI summary from your transactions. It can get things wrong.</div>' : '') + '</div>';
+  }
+  function done(colour, ico, title, lines, btns) {
+    return '<div class="body"><div class="done-ico" style="background:' + colour + '">' + ico + '</div>' +
+      '<h3 class="center">' + title + '</h3>' + lines.map(function (l) { return '<p class="center sub" style="font-size:12.5px;margin:0">' + l + '</p>'; }).join('') +
+      '<div class="btns">' + btns + '</div></div>';
+  }
+  function lockScreen(time, date, notifs) {
+    return '<div class="view lock">' + status(time, 'color:#fff') +
+      '<div class="clock">' + time + '</div><div class="date">' + date + '</div>' + notifs +
+      '<div class="hint">Tap a notification to open it</div></div>';
+  }
+  function notif(go, src, when, title, text) {
+    return '<button class="notif" data-go="' + go + '"><div class="src">' + src + ' <span>' + when + '</span></div><b>' + title + '</b><br>' + text + '</button>';
+  }
+
+  // ---------- state ----------
+  var S = {};
+  var toastTimer = null;
+
+  // ---------- scenarios ----------
+  var SC = {
+    maya: {
+      name: 'Spending flag', sub: 'Unusual amount, bills at risk',
+      desc: 'Maya is at a boutique, about to spend $268 on a dress. The app flags it, shows the effect on her bills and savings goal, and gives her options. Nothing is blocked.',
+      devices: [['p', 'Maya · Boutique']],
+      start: function () { return { p: 'checkout', opt: 0 }; },
+      steps: [['Checkout', 'p:checkout'], ['Flag popup', 'p:flag'], ['Why we flagged it', 'p:why'], ['Effect on bills', 'p:impact'], ['Options', 'p:options']],
+      controls: []
+    },
+    margaret: {
+      name: 'Trusted person', sub: 'New payee, large amount',
+      desc: 'A retiree chooses his son as a trusted person, then pays a roofer he has never paid. The app pauses and asks his son for a second opinion. His answer is only advice, and he still makes the decision.',
+      devices: [['m', 'George'], ['d', 'David (his son)']],
+      start: function () { return { m: 'flags-off', d: 'lock' }; },
+      steps: [['1. Choose a trusted person', 'm:flags-off'], ['2. Make the payment', 'm:pay'], ['3. Payment paused', 'm:paused']],
+      controls: [['Skip ahead 30 minutes (David hasn\'t replied)', 'noReply', function () { return S.m === 'paused' && S.d !== 'replied-ok' && S.d !== 'replied-talk'; }]]
+    },
+    location: {
+      name: 'Possible fraud', sub: 'Card used far from phone',
+      desc: 'Sam is travelling in Paris when his card is used in Perth, Australia. Because this is a security alert, blocking the card is the main button.',
+      devices: [['p', 'Sam · Paris']],
+      start: function () { return { p: 'lock' }; },
+      steps: [['Notification', 'p:lock'], ['Was this you?', 'p:wasyou']],
+      controls: []
+    },
+    auto: {
+      name: 'Smart SafeBlock', sub: 'Auto-protect, card testing',
+      desc: 'This is an expansion idea. With opt-in auto-protect, a $1 test charge followed by a bigger attempt pauses online card payments. Bills keep going. The customer can go to full SafeBlock or resume.',
+      devices: [['p', 'Customer']],
+      start: function () { return { p: 'lock' }; },
+      steps: [['Notifications', 'p:lock'], ['What we paused', 'p:paused'], ['Auto-protect settings', 'p:settings']],
+      controls: []
+    },
+    settings: {
+      name: 'Flag settings', sub: 'Customer controls',
+      desc: 'Every flag can be changed or switched off. Limits are set by the customer.',
+      devices: [['p', 'Customer']],
+      start: function () { return { p: 'flags', limit: 500, t: { limit: 1, amount: 1, loc: 1, tp: 0, auto: 1 } }; },
+      steps: [['My flags', 'p:flags']],
+      controls: []
+    }
+  };
+  var ORDER = ['maya', 'margaret', 'location', 'auto', 'settings'];
+
+  // ---------- screens ----------
+  var V = {};
+
+  /* ===== Maya ===== */
+  var OPTS = [
+    ['Pay now, skip this week\'s savings', 'Bills covered. Japan trip a week later.', 'Pay $268 and skip savings'],
+    ['Wait until pay day, Thu 26 Nov', 'Nothing else changes.', 'Remind me on pay day'],
+    ['Pay now, change nothing', 'Electricity $21 short.', 'Pay $268']
+  ];
+  V['maya:p:checkout'] = function () {
+    return '<div class="view">' + status('6:42') +
+      '<div class="body"><div class="label">Checkout · The Boutique</div>' +
+      '<div class="card"><div class="row"><span>Dress × 1</span><span class="num">$268.00</span></div><div class="row"><span class="sub">In-store purchase</span><span class="sub">Boutique</span></div></div>' +
+      '<div class="card"><div class="row"><span>Pay with Westpac card ···· 4417</span><span class="pill ok">Default</span></div></div>' +
+      '<div class="btns"><button class="btn primary" data-go="p:flag">Pay $268.00</button></div></div></div>';
+  };
+  V['maya:p:flag'] = function () {
+    return '<div class="view">' + status('6:42') +
+      '<div class="body" style="opacity:.55"><div class="label">Checkout · The Boutique</div><div class="card"><div class="row"><span>Dress × 1</span><span class="num">$268.00</span></div></div></div>' +
+      '<div class="dim"></div><div class="sheet">' +
+      '<div class="row" style="border:0;margin:0;padding:0"><span class="pill warn">Unusual amount</span><button class="link" data-go="p:why">Why am I seeing this?</button></div>' +
+      '<h3>This is about 4× what you usually spend on clothing</h3>' +
+      '<div class="card" style="padding:10px 12px"><div class="row"><span>This payment</span><span class="num">$268.00</span></div>' +
+      '<div class="row"><span>Your usual clothing purchase<div class="sub">median of your last 8</div></span><span class="num">$62.00</span></div></div>' +
+      ai('Why it matters', 'Pay this today and you\'d be <b>$21 short for electricity</b> on Mon 23 Nov.', true) +
+      '<div class="btns"><button class="btn primary" data-go="p:impact">See what it affects</button>' +
+      '<div class="btns two"><button class="btn ghost" data-act="mayaPay" data-v="2">Pay anyway</button><button class="btn ghost" data-go="p:notnow">Not now</button></div></div></div></div>';
+  };
+  V['maya:p:why'] = function () {
+    return '<div class="view red-top">' + status('6:42') + appbar('Why we flagged this', 'The Boutique · $268.00', 'p:flag') +
+      '<div class="body"><div><span class="pill warn">Unusual amount</span></div><div class="card">' +
+      '<div class="row"><div><b>About 4× your usual clothing spend</b><div class="sub">Your last 8 clothing purchases sit around $62.</div></div></div>' +
+      '<div class="row"><div><b>Electricity is due Mon 23 Nov</b><div class="sub">You\'d be $21 short when it comes out.</div></div></div>' +
+      '<div class="row"><div><b>Pay day isn\'t until Thu 26 Nov</b><div class="sub">Estimated from your recent shifts.</div></div></div></div>' +
+      ai('Written by Westpac AI', 'This comes from your transaction history. It can get things wrong.') +
+      '<div class="btns"><button class="btn ghost" data-act="toast" data-v="Connecting you to a Westpac specialist… (demo)">Talk to a person</button>' +
+      '<button class="btn quiet" data-act="toast" data-v="Thanks. We\'ll flag fewer payments like this.">This flag wasn\'t useful</button></div></div></div>';
+  };
+  V['maya:p:impact'] = function () {
+    return '<div class="view red-top">' + status('6:42') + appbar('If you pay $268 today', 'Next 10 days · pay expected Thu 26 Nov', 'p:flag') +
+      '<div class="body"><div class="card" style="padding:10px">' +
+      '<svg viewBox="0 0 256 140" width="100%" role="img" aria-label="Projected balance with and without the payment">' +
+      '<rect x="0" y="112" width="256" height="10" fill="#fde4e1"/><line x1="0" y1="112" x2="256" y2="112" stroke="#b3261e" stroke-width="1" stroke-dasharray="3 3"/>' +
+      '<text x="2" y="108" font-size="10" fill="#b3261e">$0</text>' +
+      '<path d="M10,14 H70 V56 H130 V68 H190 V85 H246" fill="none" stroke="#9b97a8" stroke-width="2"/>' +
+      '<path d="M10,46 H70 V88 H130 V99 H190 V115 H246" fill="none" stroke="#d5002b" stroke-width="2.5" stroke-dasharray="400" stroke-dashoffset="400"><animate attributeName="stroke-dashoffset" to="0" dur="0.9s" fill="freeze"/></path>' +
+      '<circle cx="246" cy="85" r="3" fill="#9b97a8"/><circle cx="246" cy="115" r="3.5" fill="#d5002b"/>' +
+      '<text x="12" y="10" font-size="10" fill="#6b6878" font-weight="600">$850</text><text x="12" y="42" font-size="10" fill="#d5002b" font-weight="600">$582</text>' +
+      '<text x="240" y="79" font-size="10.5" text-anchor="end" fill="#6b6878" font-weight="600">$247</text><text x="240" y="109" font-size="10.5" text-anchor="end" fill="#b3261e" font-weight="700">−$21</text>' +
+      '<g font-size="10" fill="#6b6878" text-anchor="middle"><text x="18" y="136">Today</text><text x="70" y="136">Wed 18</text><text x="130" y="136">Fri 20</text><text x="190" y="136">Mon 23</text></g></svg>' +
+      '<div class="legend"><span><i style="background:#9b97a8"></i>Without it</span><span><i style="background:#d5002b"></i>With it</span><span style="margin-left:auto">Estimate</span></div></div>' +
+      '<div class="card">' +
+      '<div class="row bill"><span>Rent<div class="sub">Wed 18 Nov</div></span><span class="num">$360</span><span class="pill ok">Covered</span></div>' +
+      '<div class="row bill"><span>Phone<div class="sub">Fri 20 Nov</div></span><span class="num">$45</span><span class="pill ok">Covered</span></div>' +
+      '<div class="row bill"><span>Japan trip savings<div class="sub">Fri 20 Nov</div></span><span class="num">$50</span><span class="pill warn">At risk</span></div>' +
+      '<div class="row bill"><span>Electricity<div class="sub">Mon 23 Nov</div></span><span class="num">$148</span><span class="pill bad">$21 short</span></div></div>' +
+      '<div class="btns"><button class="btn primary" data-go="p:options">Show my options</button></div></div></div>';
+  };
+  V['maya:p:options'] = function () {
+    var o = S.opt;
+    var goal = o === 0 ? ['<s>23 Apr 2027</s> → <b style="color:var(--warn)">30 Apr 2027</b>', '61.7%'] : ['23 Apr 2027', '61.7%'];
+    return '<div class="view red-top">' + status('6:43') + appbar('Your options', 'The Boutique · $268.00', 'p:impact') +
+      '<div class="body">' + OPTS.map(function (x, i) {
+        return '<button class="opt' + (i === o ? ' sel' : '') + '" data-act="mayaOpt" data-v="' + i + '"><i class="radio"></i><div><b>' + x[0] + '</b><span>' + x[1] + '</span></div></button>';
+      }).join('') +
+      '<div class="card"><div class="row" style="margin-bottom:6px"><b>Japan trip</b><span class="num">$1,850 of $3,000</span></div>' +
+      '<div class="bar"><i style="width:' + goal[1] + '"></i></div>' +
+      '<div class="row" style="border:0;margin-top:8px;padding:0"><span class="sub">Goal reached</span><span class="sub">' + goal[0] + '</span></div></div>' +
+      '<div class="btns"><button class="btn primary" data-act="mayaPay" data-v="' + o + '">' + OPTS[o][2] + '</button>' +
+      '<button class="btn quiet" data-go="p:notnow">Cancel payment</button></div></div></div>';
+  };
+  V['maya:p:done'] = function () {
+    var r = {
+      0: ['var(--ok)', '✓', 'Paid $268 to The Boutique', ['This week\'s $50 to your Japan trip is skipped.', 'All bills covered. New goal date 30 Apr 2027.']],
+      1: ['var(--info)', '⏰', 'We\'ll remind you on pay day', ['Nothing has been paid yet.', 'You\'ll get a reminder on Thu 26 Nov after your pay lands.']],
+      2: ['var(--warn)', '✓', 'Paid $268 to The Boutique', ['Electricity ($148, Mon 23 Nov) may be $21 short.', 'We\'ll remind you on Sun 22 Nov so you can top up.']]
+    }[S.opt];
+    return '<div class="view">' + status('6:43') + done(r[0], r[1], r[2], r[3], '<button class="btn ghost" data-act="reset">Start again</button>') + '</div>';
+  };
+  V['maya:p:notnow'] = function () {
+    return '<div class="view">' + status('6:43') + done('#8a8696', '–', 'Nothing was paid', ['You can return to the boutique purchase when you are ready.'], '<button class="btn ghost" data-act="reset">Start again</button>') + '</div>';
+  };
+
+  /* ===== George ===== */
+  V['margaret:m:flags-off'] = function () {
+    return '<div class="view red-top">' + status('10:10') + appbar('My flags', 'Choose when we give you a heads-up') +
+      '<div class="body"><div class="card">' +
+      '<div class="row"><div><b>My spending limit</b><div class="sub">Any single payment over $1,000</div></div><i class="toggle"></i></div>' +
+      '<div class="row"><div><b>Unusual amount</b><div class="sub">2× my usual for that category</div></div><i class="toggle"></i></div>' +
+      '<div class="row"><div><b>Trusted person check</b><div class="sub">Off · no one chosen yet</div></div><i class="toggle off"></i></div></div>' +
+      ai('Trusted person', 'Choose someone to double-check big payments to people you haven\'t paid before. They can give an opinion but can\'t see your balance or move money.') +
+      '<div class="btns"><button class="btn primary" data-go="m:contacts">Choose a trusted person</button></div></div></div>';
+  };
+  V['margaret:m:contacts'] = function () {
+    var p = [['DH', '#2b4c9b', 'David Hughes', 'Son · banks with Westpac', '<span class="pill ok">Westpac</span>', 1],
+             ['JP', '#8a8696', 'Joan Pryor', 'Banks with Westpac', '<span class="pill ok">Westpac</span>', 0],
+             ['SN', '#8a8696', 'Sunil Nair', 'Another bank', '<span class="pill info">ID check</span>', 0],
+             ['PK', '#8a8696', 'Pat Keogh', 'Another bank', '<span class="pill info">ID check</span>', 0]];
+    return '<div class="view red-top">' + status('10:11') + appbar('Choose a trusted person', 'Someone to double-check big payments', 'm:flags-off') +
+      '<div class="body"><div class="card"><b>Trusted-person invitations</b><div class="sub">Demo people only. No access to your phone contacts. Pair with an invitation code or QR code.</div></div><div class="card">' +
+      p.map(function (c) {
+        return '<div class="row"><button class="contact" data-act="toast" data-v="' + (c[5] ? 'David is selected.' : 'In this demo, David is the trusted person.') + '"><div class="face" style="background:' + c[1] + '">' + c[0] + '</div><div style="flex:1"><b>' + c[2] + '</b><div class="sub">' + c[3] + '</div></div>' + (c[5] ? '<span class="pill ok">Chosen</span>' : c[4]) + '</button></div>';
+      }).join('') + '</div>' +
+      '<div class="btns"><button class="btn primary" data-go="m:verify">Continue with David</button></div></div></div>';
+  };
+  V['margaret:m:verify'] = function () {
+    return '<div class="view red-top">' + status('10:12') + appbar('Confirm it\'s David', 'Quickest when you\'re together', 'm:contacts') +
+      '<div class="body"><h3>Is David with you now?</h3>' +
+      '<div class="card center"><div class="qr"></div>Ask him to scan this in his Westpac app</div>' +
+      '<div class="card center"><div class="label">Or he can type this code</div><div class="code"><b>4</b><b>8</b><b>1</b><b>9</b><b>0</b><b>3</b></div></div>' +
+      '<div class="btns"><button class="btn ghost" data-act="toast" data-v="We\'d send David a link to confirm his ID instead (e.g. with ConnectID).">He\'s not here</button></div></div></div>';
+  };
+  V['margaret:m:tp-on'] = function () {
+    return '<div class="view red-top">' + status('10:15') + appbar('Trusted person') +
+      '<div class="body"><div class="card"><div class="row" style="justify-content:flex-start">' +
+      '<div class="face" style="background:#2b4c9b">DH</div><div style="flex:1"><b>David Hughes</b><div class="sub">Son · accepted just now</div></div><span class="pill ok">Active</span></div></div>' +
+      '<div class="card"><div class="label" style="margin-bottom:8px">Ask David to double-check when</div>' +
+      '<div class="row"><span>I pay someone new</span><i class="toggle"></i></div>' +
+      '<div class="row"><span>and the amount is over</span><span class="num">$1,000</span></div></div>' +
+      '<div class="card"><div class="label" style="margin-bottom:6px">What David can and can\'t do</div><div class="steps">' +
+      '<div class="step"><i class="dot">✓</i><span>See the payee and amount</span></div>' +
+      '<div class="step"><i class="dot">✓</i><span>Give you his opinion</span></div>' +
+      '<div class="step todo"><i class="dot">✕</i><span>See your balance or move money</span></div></div></div>' +
+      '<div class="btns"><button class="btn primary" data-go="m:pay">Pay someone</button><button class="btn quiet" data-act="toast" data-v="You can remove David at any time.">Remove David</button></div></div></div>';
+  };
+  V['margaret:m:pay'] = function () {
+    return '<div class="view red-top">' + status('2:06') + appbar('Pay someone new', '', 'm:tp-on') +
+      '<div class="body">' +
+      '<div class="field"><div class="label">To</div><b>R. Dalton Roofing</b><div class="sub">BSB 062-000 · Acc 1234 5678</div></div>' +
+      '<div class="card" style="padding:9px 12px"><div class="row"><span><b>Name checked</b><div class="sub">Westpac Verify</div></div><span class="pill ok">Name matches</span></div></div>' +
+      '<div class="field"><div class="label">Amount</div><div class="big">$4,800.00</div></div>' +
+      '<div class="field"><div class="label">Note</div>Roof repair deposit</div>' +
+      '<div class="btns"><button class="btn primary" data-go="m:paused">Pay $4,800.00</button></div></div></div>';
+  };
+  function margaretHeader() {
+    return status('2:08') + appbar('Before this goes', 'Payment to R. Dalton Roofing') +
+      '<div class="body"><div class="card"><div class="label">Amount</div><div class="big">$4,800.00</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><span class="pill warn">New payee</span><span class="pill warn">Over your $1,000 limit</span></div></div>';
+  }
+  V['margaret:m:paused'] = function () {
+    return '<div class="view red-top">' + margaretHeader() +
+      ai('Why we\'ve paused this', 'You\'ve never paid this account before, and it\'s your biggest payment this year.', true) +
+      '<div class="card"><div class="steps"><div class="step"><i class="dot">✓</i><span>Payment details entered</span></div>' +
+      '<div class="step wait"><i class="dot">…</i><span><b>We\'ve asked David</b><br><span class="sub">Sent 2:07 pm · waiting for his reply</span></span></div>' +
+      '<div class="step todo"><i class="dot">3</i><span>You decide whether to send</span></div></div></div>' +
+      '<div class="btns"><button class="btn primary" data-act="toast" data-v="We\'ll let you know as soon as David replies.">Wait for David</button>' +
+      '<button class="btn ghost" data-go="m:sent">Send now without waiting</button><button class="btn quiet" data-go="m:cancelled">Cancel payment</button></div></div></div>';
+  };
+  V['margaret:m:approved'] = function () {
+    return '<div class="view red-top">' + margaretHeader() +
+      '<div class="card"><div class="steps"><div class="step"><i class="dot">✓</i><span>Payment details entered</span></div>' +
+      '<div class="step"><i class="dot">✓</i><span><b>David says it looks right</b><br><span class="sub">Replied 2:12 pm</span></span></div>' +
+      '<div class="step wait"><i class="dot">3</i><span><b>You decide whether to send</b></span></div></div></div>' +
+      ai('Reminder', 'David\'s reply is only advice. Send it if you\'re happy with it too.') +
+      '<div class="btns"><button class="btn primary" data-go="m:sent">Send $4,800</button><button class="btn quiet" data-go="m:cancelled">Cancel payment</button></div></div></div>';
+  };
+  V['margaret:m:talk'] = function () {
+    return '<div class="view red-top">' + margaretHeader() +
+      '<div class="card"><div class="steps"><div class="step"><i class="dot">✓</i><span>Payment details entered</span></div>' +
+      '<div class="step no"><i class="dot">!</i><span><b>David would like to talk first</b><br><span class="sub">Replied 2:12 pm</span></span></div>' +
+      '<div class="step wait"><i class="dot">3</i><span><b>You decide whether to send</b></span></div></div></div>' +
+      '<div class="btns"><button class="btn primary" data-go="m:held">Keep payment on hold</button>' +
+      '<button class="btn ghost" data-go="m:sent">Send anyway</button><button class="btn quiet" data-go="m:cancelled">Cancel payment</button></div></div></div>';
+  };
+  V['margaret:m:noreply'] = function () {
+    return '<div class="view red-top">' + margaretHeader() +
+      '<div class="card"><div class="steps"><div class="step"><i class="dot">✓</i><span>Payment details entered</span></div>' +
+      '<div class="step no"><i class="dot">–</i><span><b>David hasn\'t replied</b><br><span class="sub">Asked 30 minutes ago</span></span></div>' +
+      '<div class="step wait"><i class="dot">3</i><span><b>You decide whether to send</b></span></div></div></div>' +
+      '<div class="btns"><button class="btn primary" data-act="toast" data-v="We\'ve asked Joan Pryor as well.">Ask someone else</button>' +
+      '<button class="btn ghost" data-go="m:sent">Send without David</button><button class="btn ghost" data-go="m:paused">Keep waiting</button><button class="btn quiet" data-go="m:cancelled">Cancel payment</button></div></div></div>';
+  };
+  V['margaret:m:held'] = function () {
+    return '<div class="view">' + status('2:13') + done('var(--info)', '☎', 'Payment on hold', ['Nothing has been sent. We\'ll keep this payment for 7 days.', 'Discuss it with David outside the app, then return to Payments.'],
+      '<button class="btn ghost" data-act="reset">Start again</button>') + '</div>';
+  };
+  V['margaret:m:sent'] = function () {
+    return '<div class="view">' + status('2:13') + done('var(--ok)', '✓', '$4,800 sent to R. Dalton Roofing', ['Name checked by Westpac Verify.', 'Receipt saved in Payments.'], '<button class="btn ghost" data-act="reset">Start again</button>') + '</div>';
+  };
+  V['margaret:m:cancelled'] = function () {
+    return '<div class="view">' + status('2:13') + done('#8a8696', '–', 'Payment cancelled', ['Nothing was sent.', 'If you think this was a scam, we can help.'], '<button class="btn ghost" data-act="toast" data-v="Opening scam support… (demo)">Report a scam</button><button class="btn ghost" data-act="reset">Start again</button>') + '</div>';
+  };
+
+  // David
+  V['margaret:d:lock'] = function () {
+    var n = S.m === 'verify' ? notif('d:scan', 'WESTPAC', 'now', 'George wants you as his trusted person', 'Tap to scan his code.') : '';
+    return lockScreen(S.m === 'verify' || S.m === 'flags-off' || S.m === 'contacts' ? '10:12' : '2:06', 'Tuesday 17 November', n);
+  };
+  V['margaret:d:scan'] = function () {
+    return '<div class="view red-top">' + status('10:12') + appbar('Become a trusted person', 'For George Hughes') +
+      '<div class="body"><div class="scanner"></div>' +
+      '<div class="card"><div class="label" style="margin-bottom:6px">If you accept, you\'ll be able to</div><div class="steps">' +
+      '<div class="step"><i class="dot">✓</i><span>See one payment at a time, when he asks</span></div>' +
+      '<div class="step todo"><i class="dot">✕</i><span>See his balance or move his money</span></div></div></div>' +
+      '<div class="btns"><button class="btn primary" data-act="davidAccept">Scan and accept</button><button class="btn quiet" data-go="d:lock">Not now</button></div></div></div>';
+  };
+  V['margaret:d:accepted'] = function () {
+    return '<div class="view">' + status('10:15') + done('var(--ok)', '✓', 'You\'re George\'s trusted person', ['We\'ll only contact you when he asks for a second opinion.', 'You can step down at any time.'], '<button class="btn ghost" data-go="d:lock">Done</button>') + '</div>';
+  };
+  V['margaret:d:notif'] = function () {
+    return lockScreen('2:09', 'Tuesday 17 November', notif('d:review', 'WESTPAC', 'now', 'George would like a second opinion', '$4,800 to a new payee, R. Dalton Roofing.'));
+  };
+  V['margaret:d:review'] = function () {
+    return '<div class="view lock">' + status('2:09', 'color:#fff') +
+      '<div class="sheet" style="max-height:96%"><div class="row" style="justify-content:flex-start;border:0;margin:0;padding:0"><div class="face" style="background:#0f7c86">GH</div>' +
+      '<div><b>George Hughes</b><div class="sub">asked you to double-check a payment</div></div></div>' +
+      '<div class="card" style="padding:10px 12px"><div class="row"><span>To</span><b>R. Dalton Roofing</b></div>' +
+      '<div class="row"><span>Amount</span><span class="num">$4,800.00</span></div><div class="row"><span>His note</span><span>"Roof repair deposit"</span></div>' +
+      '<div class="row"><span>Name check</span><span class="pill ok">Name matches</span></div></div>' +
+      ai('Things worth asking', 'Did Dad find this roofer himself?<br>Did the bank details come by email or text?<br>Has any work started yet?') +
+      '<div class="btns"><button class="btn primary" data-act="davidReply" data-v="ok">Looks right to me</button><button class="btn ghost" data-act="davidReply" data-v="talk">I\'d like to talk first</button></div>' +
+      '<div class="sub center">It\'s still George\'s decision.</div></div></div>';
+  };
+  V['margaret:d:replied-ok'] = function () {
+    return '<div class="view">' + status('2:12') + done('var(--ok)', '✓', 'Thanks, we\'ve told George', ['He\'ll decide whether to send it.'], '<button class="btn ghost" data-go="d:lock">Done</button>') + '</div>';
+  };
+  V['margaret:d:replied-talk'] = function () {
+    return '<div class="view">' + status('2:12') + done('var(--info)', '☎', 'We\'ve let George know', ['The payment stays paused until he decides.', 'Discuss the payment with George outside the app.'], '<button class="btn ghost" data-go="d:lock">Done</button>') + '</div>';
+  };
+
+  /* ===== Location ===== */
+  V['location:p:lock'] = function () {
+    return lockScreen('9:31', 'Tuesday 17 November', notif('p:wasyou', 'WESTPAC', 'now', 'Was this you? $389.00', 'Card ···· 4417 at Northbridge Electronics, Perth WA. We\'ve held it.'));
+  };
+  V['location:p:wasyou'] = function () {
+    return '<div class="view red-top">' + status('9:31') + appbar('Was this you?', 'Card ···· 4417 · 9:30 pm') +
+      '<div class="body"><div><span class="pill bad">Unusual location</span></div>' +
+      '<div class="card"><div class="label">In-store purchase</div><div class="big">$389.00</div><div class="sub">Northbridge Electronics, Perth WA</div></div>' +
+      '<div class="map"><svg viewBox="0 0 252 92" width="100%" height="100%" aria-hidden="true">' +
+      '<path d="M40,50 Q126,-6 212,46" fill="none" stroke="#b3261e" stroke-width="1.5" stroke-dasharray="4 4"/>' +
+      '<circle cx="40" cy="50" r="6" fill="#b3261e"><animate attributeName="r" values="6;9;6" dur="1.6s" repeatCount="3"/></circle><circle cx="212" cy="46" r="6" fill="#2b4c9b"/>' +
+      '<text x="40" y="74" font-size="11" text-anchor="middle" fill="#b3261e" font-weight="700">Card · Perth</text>' +
+      '<text x="208" y="70" font-size="11" text-anchor="middle" fill="#2b4c9b" font-weight="700">You · Paris</text>' +
+      '<text x="126" y="40" font-size="10.5" text-anchor="middle" fill="#6b6878">Different countries</text></svg></div>' +
+      ai('Why you\'re seeing this', 'Your phone was in Paris, France, 40 minutes ago. We\'ve held the payment until you tell us.') +
+      '<div class="btns"><button class="btn primary" data-go="p:blocked">No, block my card</button><button class="btn ghost" data-go="p:approved">Yes, that was me</button></div></div></div>';
+  };
+  V['location:p:blocked'] = function () {
+    return '<div class="view red-top">' + status('9:32') + appbar('Card blocked') +
+      '<div class="body"><div class="done-ico" style="background:var(--bad);margin-top:6px">🔒</div><h3 class="center">You\'re protected</h3>' +
+      '<div class="card"><div class="steps">' +
+      '<div class="step"><i class="dot">✓</i><span>Card ···· 4417 blocked</span></div>' +
+      '<div class="step"><i class="dot">✓</i><span>$389.00 in Perth declined</span></div>' +
+      '<div class="step"><i class="dot">✓</i><span>New card ordered · 3 to 5 business days</span></div>' +
+      '<div class="step"><i class="dot">✓</i><span>Digital card ready in the app now</span></div></div></div>' +
+      '<div class="btns"><button class="btn primary" data-act="toast" data-v="Showing other recent card transactions to review… (demo)">Check other transactions</button>' +
+      '<button class="btn ghost" data-act="toast" data-v="Calling the Westpac fraud team… (demo)">Talk to the fraud team</button><button class="btn quiet" data-act="reset">Start again</button></div></div></div>';
+  };
+  V['location:p:approved'] = function () {
+    return '<div class="view">' + status('9:32') + done('var(--ok)', '✓', 'Thanks, payment approved', ['$389.00 at Northbridge Electronics went through.', 'Travelling? Add your dates and we won\'t ask again.'],
+      '<button class="btn ghost" data-act="toast" data-v="Travel dates saved: Paris, 17 to 22 Nov (demo)">Add travel dates</button><button class="btn quiet" data-act="reset">Start again</button>') + '</div>';
+  };
+
+  /* ===== Smart SafeBlock ===== */
+  V['auto:p:lock'] = function () {
+    return lockScreen('11:52', 'Tuesday 17 November',
+      notif('p:paused', 'WESTPAC', 'now', 'We\'ve paused online card payments', 'Auto-protect spotted a pattern that looks like card testing. Your bills will still go out.') +
+      '<div class="notif" style="opacity:.75;animation-delay:.15s"><div class="src">WESTPAC <span>4m ago</span></div>$1.00 at QuickTopUp Online</div>');
+  };
+  V['auto:p:paused'] = function () {
+    return '<div class="view red-top">' + status('11:53') + appbar('Online payments paused', 'Auto-protect · card ···· 4417') +
+      '<div class="body"><div><span class="pill bad">Possible card testing</span></div>' +
+      '<div class="card"><div class="steps">' +
+      '<div class="step"><i class="dot" style="background:var(--warn)">1</i><span><b>$1.00 at QuickTopUp Online</b><br><span class="sub">11:47 pm · a store you\'ve never used</span></span></div>' +
+      '<div class="step no"><i class="dot">2</i><span><b>$642.00 at the same store</b><br><span class="sub">11:51 pm · declined by auto-protect</span></span></div></div></div>' +
+      ai('Why we stepped in', 'Fraudsters often test a card with a small charge, then try a bigger one. This matched that pattern within 4 minutes.') +
+      '<div class="card" style="padding:9px 12px"><div class="label" style="margin-bottom:4px">Still working</div><div class="sub">Scheduled bills · transfers to saved payees · tap to pay in store</div></div>' +
+      '<div class="btns"><button class="btn primary" data-go="p:safeblock">Not me: turn on SafeBlock</button>' +
+      '<div class="btns two"><button class="btn ghost" data-go="p:resumed">These were me</button><button class="btn ghost" data-act="toast" data-v="Calling the Westpac fraud team… (demo)">Call us</button></div></div></div></div>';
+  };
+  V['auto:p:safeblock'] = function () {
+    return '<div class="view red-top">' + status('11:54') + appbar('SafeBlock is on') +
+      '<div class="body"><div class="done-ico" style="background:var(--bad);margin-top:6px">🔒</div><h3 class="center">Your cards and accounts are locked</h3>' +
+      '<div class="card"><div class="steps">' +
+      '<div class="step"><i class="dot">✓</i><span>New payments, transfers and card purchases blocked</span></div>' +
+      '<div class="step"><i class="dot">✓</i><span>$1.00 charge reported as fraud</span></div>' +
+      '<div class="step todo"><i class="dot">3</i><span>Unlock in the app once you\'re safe</span></div></div></div>' +
+      '<div class="sub center">Scheduled payments set up in the app still go out.</div>' +
+      '<div class="btns"><button class="btn ghost" data-act="toast" data-v="We\'ve let David know auto-protect turned on (if you chose to share this).">Tell my trusted person</button><button class="btn quiet" data-act="reset">Start again</button></div></div></div>';
+  };
+  V['auto:p:resumed'] = function () {
+    return '<div class="view">' + status('11:54') + done('var(--ok)', '✓', 'Online payments are back on', ['We\'ve marked QuickTopUp Online as known.', 'We\'ll still keep an eye on new stores.'], '<button class="btn quiet" data-act="reset">Start again</button>') + '</div>';
+  };
+  V['auto:p:settings'] = function () {
+    var t = S.auto || (S.auto = { on: 1, test: 1, far: 1, remote: 1, takeover: 1, tell: 0 });
+    function r(k, title, sub) { return '<div class="row"><div><b>' + title + '</b><div class="sub">' + sub + '</div></div><button class="toggle' + (t[k] ? '' : ' off') + '" data-act="autoToggle" data-v="' + k + '" aria-label="' + title + '"></button></div>'; }
+    return '<div class="view red-top">' + status('11:55') + appbar('Auto-protect', 'Opt in · you can change this any time', 'p:paused') +
+      '<div class="body"><div class="card">' + r('on', 'Auto-protect', 'Pause suspicious activity for me') + '</div>' +
+      '<div class="card" style="' + (t.on ? '' : 'opacity:.45') + '"><div class="label" style="margin-bottom:4px">Step in when</div>' +
+      r('test', 'Card testing', 'Small charge, then a bigger one') + r('far', 'Card far from my phone', 'Over 200 km away') +
+      r('remote', 'Screen sharing', 'Remote access app open while paying') + r('takeover', 'New device + new payee', 'Within the same hour') + '</div>' +
+      '<div class="card">' + r('tell', 'Tell my trusted person', 'Let David know when it turns on') + '</div></div></div>';
+  };
+
+  /* ===== Settings ===== */
+  V['settings:p:flags'] = function () {
+    var t = S.t;
+    function r(k, title, sub) { return '<div class="row"><div><b>' + title + '</b><div class="sub">' + sub + '</div></div><button class="toggle' + (t[k] ? '' : ' off') + '" data-act="setToggle" data-v="' + k + '" aria-label="' + title + '"></button></div>'; }
+    return '<div class="view red-top">' + status('6:50') + appbar('My flags', 'Choose when we give you a heads-up') +
+      '<div class="body"><div class="card">' +
+      '<div class="row"><div><b>My spending limit</b><div class="sub">Any single payment over</div></div>' +
+      '<div class="stepper"><button data-act="limit" data-v="-100" aria-label="Lower">−</button><span class="num">$' + S.limit.toLocaleString() + '</span><button data-act="limit" data-v="100" aria-label="Raise">+</button></div></div>' +
+      r('limit', 'Spending limit flag', t.limit ? 'On' : 'Off') +
+      r('amount', 'Unusual amount', '2× my usual for that category') +
+      r('loc', 'Unusual location', 'Over 200 km from my phone') +
+      r('tp', 'Trusted person check', t.tp ? 'David · new payees over $1,000' : 'Off · no one chosen yet') +
+      r('auto', 'Auto-protect', 'Pause suspicious activity for me') + '</div>' +
+      '<div class="card"><div class="label" style="margin-bottom:6px">This month</div>' +
+      '<div class="row"><span>Flags shown</span><span class="num">3</span></div>' +
+      '<div class="row"><span>You paid anyway</span><span class="num">1</span></div>' +
+      '<div class="row"><span>You changed your mind</span><span class="num">2</span></div></div></div></div>';
+  };
+
+  // ---------- actions ----------
+  var ACT = {
+    reset: function () { start(S.scn); },
+    toast: function (v) { showToast(v); },
+    mayaOpt: function (v) { S.opt = +v; },
+    mayaPay: function (v) { S.opt = +v; S.p = 'done'; },
+    davidAccept: function () { S.d = 'accepted'; S.m = 'tp-on'; },
+    davidReply: function (v) {
+      if (v === 'ok') { S.d = 'replied-ok'; S.m = 'approved'; } else { S.d = 'replied-talk'; S.m = 'talk'; }
+    },
+    noReply: function () { S.m = 'noreply'; S.d = 'lock'; },
+    autoToggle: function (k) { S.auto[k] = S.auto[k] ? 0 : 1; },
+    setToggle: function (k) { S.t[k] = S.t[k] ? 0 : 1; if (k === 'tp' && S.t.tp) showToast('You\'d choose someone next (see the Trusted person scenario).'); },
+    limit: function (v) { S.limit = Math.max(100, Math.min(5000, S.limit + (+v))); }
+  };
+
+  // side effects when a screen is entered
+  var ENTER = {
+    'margaret:m:paused': function () { if (S.d !== 'notif' && S.d !== 'review') S.d = 'notif'; },
+    'margaret:m:verify': function () { if (S.d === 'lock' || S.d === 'accepted') S.d = 'lock'; },
+    'margaret:m:flags-off': function () { S.d = 'lock'; },
+    'margaret:m:pay': function () { if (S.d !== 'lock') S.d = 'lock'; }
+  };
+
+  // ---------- render ----------
+  var stage = document.getElementById('stage');
+  var last = {};
+  function render() {
+    var sc = SC[S.scn];
+    // build device shells once per scenario
+    if (stage.dataset.scn !== S.scn) {
+      stage.dataset.scn = S.scn;
+      stage.innerHTML = sc.devices.map(function (d) {
+        return '<div class="device"><div class="dev-label">' + d[1] + '</div><div class="phone-wrap"><div class="phone"><div class="screen" id="scr-' + d[0] + '"></div></div></div></div>';
+      }).join('');
+      last = {};
+    }
+    sc.devices.forEach(function (d) {
+      var key = S.scn + ':' + d[0] + ':' + S[d[0]];
+      var el = document.getElementById('scr-' + d[0]);
+      var html = V[key] ? V[key]() : '<div class="view"><div class="body">Missing screen ' + key + '</div></div>';
+      if (last[d[0]] === key) {
+        // same screen: update in place without replaying entrance animations
+        var tmp = document.createElement('div'); tmp.innerHTML = html;
+        var nv = tmp.firstElementChild; nv.style.animation = 'none';
+        nv.querySelectorAll('.sheet,.dim,.notif,.done-ico').forEach(function (x) { x.style.animation = 'none'; });
+        var toast = el.querySelector('.toast');
+        el.innerHTML = ''; el.appendChild(nv); if (toast) el.appendChild(toast);
+      } else {
+        el.innerHTML = html;
+      }
+      last[d[0]] = key;
+    });
+    renderPanel();
+  }
+
+  function renderPanel() {
+    var sc = SC[S.scn];
+    document.getElementById('scnList').innerHTML = ORDER.map(function (k, i) {
+      return '<button data-scn="' + k + '" class="' + (k === S.scn ? 'on' : '') + '"><b>' + (i + 1) + '. ' + SC[k].name + '</b><span>' + SC[k].sub + '</span></button>';
+    }).join('');
+    document.getElementById('scnDesc').textContent = sc.desc;
+    document.getElementById('stepsNav').innerHTML = sc.steps.map(function (s) {
+      var p = s[1].split(':'); var on = S[p[0]] === p[1];
+      return '<button data-jump="' + s[1] + '" class="' + (on ? 'on' : '') + '">' + s[0] + '</button>';
+    }).join('');
+    var box = document.getElementById('ctrlBox');
+    box.style.display = sc.controls.length ? '' : 'none';
+    document.getElementById('ctrl').innerHTML = sc.controls.map(function (c) {
+      return '<button data-ctl="' + c[1] + '"' + (c[2]() ? '' : ' disabled') + '>⏩ ' + c[0] + '</button>';
+    }).join('');
+  }
+
+  function go(target) {
+    var p = target.split(':');
+    S[p[0]] = p[1];
+    var hook = ENTER[S.scn + ':' + p[0] + ':' + p[1]];
+    if (hook) hook();
+    render();
+  }
+
+  function start(k) {
+    var st = SC[k].start();
+    S = { scn: k };
+    Object.keys(st).forEach(function (x) { S[x] = st[x]; });
+    stage.dataset.scn = '';
+    render();
+  }
+
+  function showToast(text) {
+    var scr = document.querySelector('.screen');
+    // show on the device the user tapped, if known
+    if (showToast.el) scr = showToast.el;
+    var old = scr.querySelector('.toast'); if (old) old.remove();
+    var t = document.createElement('div'); t.className = 'toast'; t.textContent = text; scr.appendChild(t);
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.remove(); }, 2600);
+  }
+
+  // ---------- events ----------
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-go],[data-act],[data-scn],[data-jump],[data-ctl]');
+    if (!el) return;
+    showToast.el = el.closest('.screen');
+    if (el.dataset.scn) { start(el.dataset.scn); return; }
+    if (el.dataset.jump) {
+      var p = el.dataset.jump.split(':');
+      // jumping in George's flow: set David's phone to match
+      if (S.scn === 'margaret') { S.d = p[1] === 'paused' ? 'notif' : 'lock'; if (p[1] === 'pay') S.d = 'lock'; }
+      go(el.dataset.jump); return;
+    }
+    if (el.dataset.ctl) { ACT[el.dataset.ctl](); render(); return; }
+    if (el.dataset.go) { go(el.dataset.go); return; }
+    if (el.dataset.act) {
+      var a = el.dataset.act;
+      ACT[a](el.dataset.v);
+      if (a !== 'toast') render();
+    }
+  });
+
+  var hintTimer;
+  function setRec(on) {
+    document.body.classList.toggle('rec', on);
+    var h = document.getElementById('recHint');
+    h.classList.toggle('show', on);
+    clearTimeout(hintTimer); if (on) hintTimer = setTimeout(function () { h.classList.remove('show'); }, 1800);
+  }
+  document.getElementById('recBtn').onclick = function () { setRec(true); };
+  document.getElementById('resetBtn').onclick = function () { start(S.scn); };
+  document.getElementById('zoom').oninput = function (e) { document.documentElement.style.setProperty('--z', e.target.value); };
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') setRec(!document.body.classList.contains('rec'));
+    else if (e.key === 'r' || e.key === 'R') start(S.scn);
+    else if (/^[1-5]$/.test(e.key)) start(ORDER[+e.key - 1]);
+  });
+
+  var q = new URLSearchParams(location.search);
+  start(SC[q.get('s')] ? q.get('s') : 'maya');
+  if (q.has('rec')) setRec(true);
+})();
+</script>
+</body>
+</html>
