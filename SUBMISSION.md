@@ -1,12 +1,12 @@
 # Submission details
 
 - University: Queensland University of Technology (QUT)
-- Team name: [Complete]
-- Team members (minimum two): [Complete full names]
-- YouTube presentation and software demonstration (maximum 10 minutes): [URL]
-- Hosted prototype: [GitHub Pages URL]
-- Source repository: [GitHub repository URL]
-- Additional supporting material: [Optional links]
+- Team name: Works on My Machine
+- Team members (minimum two): Hans Putri and Alex King
+- YouTube presentation and software demonstration (maximum 10 minutes): Provided
+- Hosted prototype: 
+- Source repository: 
+- Additional supporting material:
 
 ## Idea summary
 
